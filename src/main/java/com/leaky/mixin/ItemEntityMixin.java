@@ -25,6 +25,7 @@ public abstract class ItemEntityMixin extends Entity
     public ItemEntityMixin(final EntityType<?> entityTypeIn, final Level worldIn)
     {
         super(entityTypeIn, worldIn);
+
     }
 
     @Unique
@@ -37,6 +38,16 @@ public abstract class ItemEntityMixin extends Entity
     @Inject(method = "tick", at = @At(value = "TAIL"))
     private void checkSize(CallbackInfo ci)
     {
+
+
+        // Dimension check
+        if (this.level.dimension() != Level.OVERWORLD &&
+            this.level.dimension() != Level.NETHER &&
+            this.level.dimension() != Level.END)
+        {
+            return; // Exit early if not in an allowed dimension
+        }
+
         if (reported || age < 20 * 60 || tickCount % 40 != 0 || Leaky.rand.nextInt(10) != 0)
         {
             return;

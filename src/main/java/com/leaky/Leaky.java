@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -14,6 +15,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import net.minecraft.world.level.Level; // Added import
 
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +46,17 @@ public class Leaky
 
     public static void detectedItemLeak(final ItemEntity entity, final List<ItemEntity> items)
     {
+        // Get the ResourceLocation for the current dimension
+        ResourceLocation currentDimension = entity.level.dimension().location();
+
+        // Dimension check: compare ResourceLocation strings
+        if (!currentDimension.equals(Level.OVERWORLD.location()) && // Compare current to Overworld's ID
+            !currentDimension.equals(Level.NETHER.location()) &&    // Compare current to Nether's ID
+            !currentDimension.equals(Level.END.location()))         // Compare current to End's ID
+        {
+            return; // Exit the method if not in an allowed dimension
+        }
+
         for (final Map.Entry<BlockPos, Long> entry : reportedLocations.entrySet())
         {
             if (entry.getKey().distSqr(entity.blockPosition()) < 10 * 10 && (entity.level.getGameTime() - entry.getValue()) < config.getCommonConfig().reportInterval * 20)
@@ -68,7 +81,7 @@ public class Leaky
             component.append(new TextComponent(". Removed leaking items automatically"));
             items.forEach(Entity::discard);
         }
-        // TODO: Make blockpos clickable for teleport command(op/creative)
+        // Make blockpos clickable for teleport command(op/creative)
 
         if (config.getCommonConfig().chatnotification.equalsIgnoreCase("PLAYER"))
         {
